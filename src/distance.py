@@ -68,8 +68,8 @@ def torch_pdist_squareform(inputs: Tensor, **kwargs: Any) -> Tensor:
     """
     distances = torch.zeros(len(inputs), len(inputs), device=inputs.device)  # [N, N]
 
-    row_inds, col_inds = torch.triu_indices(*distances.shape, offset=1)  # [N',], [N',]
-    distances[row_inds, col_inds] = torch.pdist(inputs, **kwargs)  # [N',]
+    row_inds, col_inds = torch.triu_indices(*distances.shape, offset=1)  # [N'], [N']
+    distances[row_inds, col_inds] = torch.pdist(inputs, **kwargs)  # [N']
 
     return distances + distances.T  # [N, N]
 

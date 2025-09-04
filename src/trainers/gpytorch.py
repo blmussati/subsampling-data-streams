@@ -168,17 +168,17 @@ class GPyTorchTrainer:
         return step, log
 
     def train_step(self, loader: DataLoader, mll_fn: MarginalLogLikelihood) -> float:
-        inputs, labels = get_next_batch(loader)  # [N, ...], [N,]
+        inputs, labels = get_next_batch(loader)  # [N, ...], [N]
 
         self.model.train()
 
         f_dist = self.model(inputs)  # [N, ...]
 
         with settings.num_likelihood_samples(self.n_samples_train):
-            nll = -mll_fn(f_dist, labels)  # [1,]
+            nll = -mll_fn(f_dist, labels)  # [1]
 
         self.optimizer.zero_grad()
         nll.backward()
         self.optimizer.step()
 
-        return nll.item()  # [1,]
+        return nll.item()  # [1]

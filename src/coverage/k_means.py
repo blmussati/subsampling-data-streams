@@ -81,7 +81,7 @@ def k_means_cluster(
         )
         k_means.train(inputs)
 
-        _, cluster_assignments = k_means.assign(inputs)  # [N,]
+        _, cluster_assignments = k_means.assign(inputs)  # [N]
         cluster_centers = k_means.centroids  # [k, F]
 
     else:
@@ -96,7 +96,7 @@ def k_means_cluster(
                 n_clusters, batch_size=batch_size, verbose=verbose, random_state=seed
             )
 
-        cluster_assignments = k_means.fit_predict(inputs)  # [N,]
+        cluster_assignments = k_means.fit_predict(inputs)  # [N]
         cluster_centers = k_means.cluster_centers_  # [k, F]
 
-    return cluster_assignments, cluster_centers  # [N,], [k, F]
+    return cluster_assignments, cluster_centers  # [N], [k, F]

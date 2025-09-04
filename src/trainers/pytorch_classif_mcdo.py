@@ -72,15 +72,15 @@ class PyTorchClassificationMCDropoutTrainer(
             inputs, self.n_samples_train, independent=False
         )  # [N, K, Cl]
 
-        acc = accuracy_from_conditionals(logprobs, labels)  # [K,]
-        acc = torch.mean(acc)  # [1,]
+        acc = accuracy_from_conditionals(logprobs, labels)  # [K]
+        acc = torch.mean(acc)  # [1]
 
         nll_loss_fn = torch.vmap(nll_loss, in_dims=(1, None))
 
-        nll = nll_loss_fn(logprobs, labels)  # [K,]
-        nll = torch.mean(nll)  # [1,]
+        nll = nll_loss_fn(logprobs, labels)  # [K]
+        nll = torch.mean(nll)  # [1]
 
-        return acc, nll  # [1,], [1,]
+        return acc, nll  # [1], [1]
 
     def compute_badge_pseudoloss_v1(self, inputs: Tensor) -> Tensor:
         """
@@ -88,12 +88,12 @@ class PyTorchClassificationMCDropoutTrainer(
             inputs: Tensor[float], [N, *F]
 
         Returns:
-            Tensor[float], [N,]
+            Tensor[float], [N]
         """
         logprobs = self.marginal_predict(inputs, self.n_samples_test)  # [N, Cl]
-        pseudolabels = torch.argmax(logprobs, dim=-1)  # [N,]
+        pseudolabels = torch.argmax(logprobs, dim=-1)  # [N]
 
-        return nll_loss(logprobs, pseudolabels, reduction="none")  # [N,]
+        return nll_loss(logprobs, pseudolabels, reduction="none")  # [N]
 
     def compute_badge_pseudoloss_v2(
         self, _input: Tensor, grad_params: ParamDict, no_grad_params: ParamDict
@@ -103,7 +103,7 @@ class PyTorchClassificationMCDropoutTrainer(
             inputs: Tensor[float], [1, *F]
 
         Returns:
-            Tensor[float], [1,]
+            Tensor[float], [1]
         """
         features = functional_call(
             self.model, (grad_params, no_grad_params), _input[None, :], dict(k=self.n_samples_test)
@@ -112,6 +112,6 @@ class PyTorchClassificationMCDropoutTrainer(
         logprobs = log_softmax(features, dim=-1)  # [1, K, Cl]
         logprobs = logmeanexp(logprobs, dim=1)  # [1, Cl]
 
-        pseudolabel = torch.argmax(logprobs, dim=-1)  # [1,]
+        pseudolabel = torch.argmax(logprobs, dim=-1)  # [1]
 
-        return nll_loss(logprobs, pseudolabel)  # [1,]
+        return nll_loss(logprobs, pseudolabel)  # [1]

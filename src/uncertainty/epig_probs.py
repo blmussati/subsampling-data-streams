@@ -26,7 +26,7 @@ def expected_joint_entropy_from_probs(probs_pool: Tensor, probs_targ: Tensor) ->
         probs_targ: Tensor[float], [N_t, K, Cl]
 
     Returns:
-        Tensor[float], [N_p,]
+        Tensor[float], [N_p]
     """
     assert probs_pool.ndim == probs_targ.ndim == 3
 
@@ -37,10 +37,10 @@ def expected_joint_entropy_from_probs(probs_pool: Tensor, probs_targ: Tensor) ->
     probs_targ = probs_targ.reshape(K, N_t * Cl)  # [K, N_t * Cl]
     probs_joint = probs_pool @ probs_targ / K  # [N_p, Cl, N_t * Cl]
 
-    scores = -torch.sum(torch.xlogy(probs_joint, probs_joint), dim=(-2, -1)) / N_t  # [N_p,]
-    scores = check(scores, max_value=math.log(Cl**2), score_type="JE")  # [N_p,]
+    scores = -torch.sum(torch.xlogy(probs_joint, probs_joint), dim=(-2, -1)) / N_t  # [N_p]
+    scores = check(scores, max_value=math.log(Cl**2), score_type="JE")  # [N_p]
 
-    return scores  # [N_p,]
+    return scores  # [N_p]
 
 
 def conditional_epig_from_probs(probs_pool: Tensor, probs_targ: Tensor) -> Tensor:
@@ -94,12 +94,12 @@ def epig_from_probs(probs_pool: Tensor, probs_targ: Tensor) -> Tensor:
         probs_targ: Tensor[float], [N_t, K, Cl]
 
     Returns:
-        Tensor[float], [N_p,]
+        Tensor[float], [N_p]
     """
     scores = conditional_epig_from_probs(probs_pool, probs_targ)  # [N_p, N_t]
-    scores = torch.mean(scores, dim=-1)  # [N_p,]
+    scores = torch.mean(scores, dim=-1)  # [N_p]
 
-    return scores  # [N_p,]
+    return scores  # [N_p]
 
 
 def epig_from_probs_using_matmul(probs_pool: Tensor, probs_targ: Tensor) -> Tensor:
@@ -117,18 +117,18 @@ def epig_from_probs_using_matmul(probs_pool: Tensor, probs_targ: Tensor) -> Tens
         probs_targ: Tensor[float], [N_t, K, Cl]
 
     Returns:
-        Tensor[float], [N_p,]
+        Tensor[float], [N_p]
     """
     _, _, Cl = probs_targ.shape
 
-    entropy_pool = marginal_entropy_from_probs(probs_pool)  # [N_p,]
-    entropy_targ = marginal_entropy_from_probs(probs_targ)  # [N_t,]
-    entropy_joint = expected_joint_entropy_from_probs(probs_pool, probs_targ)  # [N_p,]
+    entropy_pool = marginal_entropy_from_probs(probs_pool)  # [N_p]
+    entropy_targ = marginal_entropy_from_probs(probs_targ)  # [N_t]
+    entropy_joint = expected_joint_entropy_from_probs(probs_pool, probs_targ)  # [N_p]
 
-    scores = entropy_pool + torch.mean(entropy_targ) - entropy_joint  # [N_p,]
-    scores = check(scores, max_value=math.log(Cl**2), score_type="EPIG")  # [N_p,]
+    scores = entropy_pool + torch.mean(entropy_targ) - entropy_joint  # [N_p]
+    scores = check(scores, max_value=math.log(Cl**2), score_type="EPIG")  # [N_p]
 
-    return scores  # [N_p,]
+    return scores  # [N_p]
 
 
 def epig_from_probs_using_weights(
@@ -145,13 +145,13 @@ def epig_from_probs_using_weights(
     Arguments:
         probs_pool: Tensor[float], [N_p, K, Cl]
         probs_targ: Tensor[float], [N_t, K, Cl]
-        weights: Tensor[float], [N_t,]
+        weights: Tensor[float], [N_t]
 
     Returns:
-        Tensor[float], [N_p,]
+        Tensor[float], [N_p]
     """
     scores = conditional_epig_from_probs(probs_pool, probs_targ)  # [N_p, N_t]
     scores = weights[None, :] * scores  # [N_p, N_t]
-    scores = torch.mean(scores, dim=-1)  # [N_p,]
+    scores = torch.mean(scores, dim=-1)  # [N_p]
 
-    return scores  # [N_p,]
+    return scores  # [N_p]

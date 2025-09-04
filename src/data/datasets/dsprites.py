@@ -71,16 +71,16 @@ class DSprites(BaseDataset):
         inputs = inputs.astype(np.float32)  # [N, 1, 64, 64]
 
         labels = npz_file["latents_classes"]  # [N, 6], np.int64
-        labels = labels[:, self.target_names[target_latent]]  # [N,]
+        labels = labels[:, self.target_names[target_latent]]  # [N]
 
-        return inputs, labels  # [N, 1, 64, 64], [N,]
+        return inputs, labels  # [N, 1, 64, 64], [N]
 
     def preprocess_inputs_for_zero_mean_and_unit_variance(self, train_inputs: np.ndarray) -> None:
         """
         If X is binary then X^2 = X and Var(X) = E[X^2] - E[X]^2 = E[X] - E[X]^2.
         """
-        self.data_mean = np.sum(train_inputs) / train_inputs.size  # [1,]
-        self.data_std = np.sqrt(self.data_mean - np.square(self.data_mean))  # [1,]
+        self.data_mean = np.sum(train_inputs) / train_inputs.size  # [1]
+        self.data_std = np.sqrt(self.data_mean - np.square(self.data_mean))  # [1]
         self.data = (self.data - self.data_mean) / self.data_std  # [N, 1, 64, 64]
 
 

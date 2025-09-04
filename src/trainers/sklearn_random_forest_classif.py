@@ -75,7 +75,7 @@ class SKLearnRandomForestClassificationTrainer(ProbsClassificationStochasticTrai
         return probs  # [N, Cl]
 
     def train(self, train_loader: DataLoader) -> Tuple[None, None]:
-        inputs, labels = next(iter(train_loader))  # [N, *F], [N,]
+        inputs, labels = next(iter(train_loader))  # [N, *F], [N]
 
         assert len(inputs) == len(train_loader.dataset)
 

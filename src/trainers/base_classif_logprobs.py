@@ -49,8 +49,8 @@ class LogprobsClassificationDeterministicTrainer(DeterministicTrainer):
             logprobs = logprobs[:, :n_classes]  # [N, n_classes]
             logprobs -= torch.logsumexp(logprobs, dim=-1, keepdim=True)  # [N, n_classes]
 
-        n_correct = count_correct_from_marginals(logprobs, labels)  # [1,]
-        nll = nll_loss(logprobs, labels, reduction="sum")  # [1,]
+        n_correct = count_correct_from_marginals(logprobs, labels)  # [1]
+        nll = nll_loss(logprobs, labels, reduction="sum")  # [1]
 
         return {"n_correct": n_correct, "nll": nll}
 
@@ -59,7 +59,7 @@ class LogprobsClassificationDeterministicTrainer(DeterministicTrainer):
 
         logprobs = self.predict(inputs)  # [N, Cl]
 
-        return uncertainty_estimator(logprobs)  # [N,]
+        return uncertainty_estimator(logprobs)  # [N]
 
 
 class LogprobsClassificationStochasticTrainer(StochasticTrainer):
@@ -83,8 +83,8 @@ class LogprobsClassificationStochasticTrainer(StochasticTrainer):
             logprobs = logprobs[:, :n_classes]  # [N, n_classes]
             logprobs -= torch.logsumexp(logprobs, dim=-1, keepdim=True)  # [N, n_classes]
 
-        n_correct = count_correct_from_marginals(logprobs, labels)  # [1,]
-        nll = nll_loss(logprobs, labels, reduction="sum")  # [1,]
+        n_correct = count_correct_from_marginals(logprobs, labels)  # [1]
+        nll = nll_loss(logprobs, labels, reduction="sum")  # [1]
 
         return {"n_correct": n_correct, "nll": nll}
 
@@ -95,7 +95,7 @@ class LogprobsClassificationStochasticTrainer(StochasticTrainer):
             inputs, self.n_samples_test, independent=True
         )  # [N, K, Cl]
 
-        return uncertainty_estimator(logprobs)  # [N,]
+        return uncertainty_estimator(logprobs)  # [N]
 
     def estimate_epig_batch(self, inputs_pool: Tensor, inputs_targ: Tensor) -> Tensor:
         logprobs = self.conditional_predict(
@@ -108,9 +108,9 @@ class LogprobsClassificationStochasticTrainer(StochasticTrainer):
         if self.epig_cfg.use_matmul:
             scores = epig_from_logprobs_using_matmul(logprobs_pool, logprobs_targ)  # [N_p,]
         else:
-            scores = epig_from_logprobs(logprobs_pool, logprobs_targ)  # [N_p,]
+            scores = epig_from_logprobs(logprobs_pool, logprobs_targ)  # [N_p]
 
-        return scores  # [N_p,]
+        return scores  # [N_p]
 
     def estimate_epig_using_target_class_dist(
         self, loader: DataLoader, n_input_samples: int | None = None
@@ -132,7 +132,7 @@ class LogprobsClassificationStochasticTrainer(StochasticTrainer):
         target_class_dist = torch.tensor([target_class_dist], device=inputs.device)  # [1, Cl]
         target_class_dist /= torch.sum(target_class_dist)  # [1, Cl]
         log_ratio = logprobs_marg - logprobs_marg_marg  # [N, Cl]
-        weights = torch.sum(target_class_dist * torch.exp(log_ratio), dim=-1)  # [N,]
+        weights = torch.sum(target_class_dist * torch.exp(log_ratio), dim=-1)  # [N]
 
         # Ensure that ∑_{x_*} w(x_*) == N.
         assert math.isclose(torch.sum(weights).item(), len(weights), rel_tol=1e-3)
@@ -144,7 +144,7 @@ class LogprobsClassificationStochasticTrainer(StochasticTrainer):
             # We do not need to normalize the weights before passing them to torch.multinomial().
             inds = torch.multinomial(
                 weights, num_samples=n_input_samples, replacement=True
-            )  # [N_s,]
+            )  # [N_s]
 
             logprobs_targ = logprobs_cond[inds]  # [N_s, K, Cl]
 
@@ -152,9 +152,9 @@ class LogprobsClassificationStochasticTrainer(StochasticTrainer):
                 if self.epig_cfg.use_matmul:
                     scores_i = epig_from_logprobs_using_matmul(
                         logprobs_cond_i, logprobs_targ
-                    )  # [B,]
+                    )  # [B]
                 else:
-                    scores_i = epig_from_logprobs(logprobs_cond_i, logprobs_targ)  # [B,]
+                    scores_i = epig_from_logprobs(logprobs_cond_i, logprobs_targ)  # [B]
 
                 scores += [scores_i.cpu()]
 
@@ -164,7 +164,7 @@ class LogprobsClassificationStochasticTrainer(StochasticTrainer):
             for logprobs_cond_i in torch.split(logprobs_cond, len(inputs)):
                 scores_i = epig_from_logprobs_using_weights(
                     logprobs_cond_i, logprobs_targ, weights
-                )  # [B,]
+                )  # [B]
                 scores += [scores_i.cpu()]
 
-        return torch.cat(scores)  # [N,]
+        return torch.cat(scores)  # [N]

@@ -36,16 +36,16 @@ def marginal_entropy_from_logprobs(logprobs: Tensor) -> Tensor:
         logprobs: Tensor[float], [N, K, Cl]
 
     Returns:
-        Tensor[float], [N,]
+        Tensor[float], [N]
     """
     assert logprobs.ndim == 3
 
     logprobs = logmeanexp(logprobs, dim=1)  # [N, Cl]
 
-    scores = entropy_from_logprobs(logprobs)  # [N,]
-    scores = check(scores, max_value=math.log(logprobs.shape[-1]), score_type="ME")  # [N,]
+    scores = entropy_from_logprobs(logprobs)  # [N]
+    scores = check(scores, max_value=math.log(logprobs.shape[-1]), score_type="ME")  # [N]
 
-    return scores  # [N,]
+    return scores  # [N]
 
 
 def conditional_entropy_from_logprobs(logprobs: Tensor) -> Tensor:
@@ -56,15 +56,15 @@ def conditional_entropy_from_logprobs(logprobs: Tensor) -> Tensor:
         logprobs: Tensor[float], [N, K, Cl]
 
     Returns:
-        Tensor[float], [N,]
+        Tensor[float], [N]
     """
     assert logprobs.ndim == 3
 
     scores = entropy_from_logprobs(logprobs)  # [N, K]
-    scores = torch.mean(scores, dim=-1)  # [N,]
-    scores = check(scores, max_value=math.log(logprobs.shape[-1]), score_type="CE")  # [N,]
+    scores = torch.mean(scores, dim=-1)  # [N]
+    scores = check(scores, max_value=math.log(logprobs.shape[-1]), score_type="CE")  # [N]
 
-    return scores  # [N,]
+    return scores  # [N]
 
 
 def bald_from_logprobs(logprobs: Tensor) -> Tensor:
@@ -82,12 +82,12 @@ def bald_from_logprobs(logprobs: Tensor) -> Tensor:
         logprobs: Tensor[float], [N, K, Cl]
 
     Returns:
-        Tensor[float], [N,]
+        Tensor[float], [N]
     """
-    marg_entropy = marginal_entropy_from_logprobs(logprobs)  # [N,]
-    cond_entropy = conditional_entropy_from_logprobs(logprobs)  # [N,]
+    marg_entropy = marginal_entropy_from_logprobs(logprobs)  # [N]
+    cond_entropy = conditional_entropy_from_logprobs(logprobs)  # [N]
 
-    scores = marg_entropy - cond_entropy  # [N,]
-    scores = check(scores, max_value=math.log(logprobs.shape[-1]), score_type="BALD")  # [N,]
+    scores = marg_entropy - cond_entropy  # [N]
+    scores = check(scores, max_value=math.log(logprobs.shape[-1]), score_type="BALD")  # [N]
 
-    return scores  # [N,]
+    return scores  # [N]

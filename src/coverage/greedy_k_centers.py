@@ -22,18 +22,18 @@ def acquire_using_greedy_k_centers(
     non_train_inds = np.setdiff1d(range(len(inputs)), train_inds)
 
     if len(train_inds) == 0:
-        min_distances = torch.full([len(non_train_inds)], torch.inf)  # [N_u,]
+        min_distances = torch.full([len(non_train_inds)], torch.inf)  # [N_u]
         selected_ind = rng.choice(non_train_inds)
     else:
         distances = torch_cdist(inputs[non_train_inds], inputs[train_inds])  # [N_u, N_l]
-        min_distances, _ = torch.min(distances, dim=-1)  # [N_u,]
+        min_distances, _ = torch.min(distances, dim=-1)  # [N_u]
         selected_ind = torch.argmax(min_distances).item()
 
     selected_inds = [selected_ind]
 
     for _ in range(n_acquire - 1):
         distances = torch_cdist(inputs[non_train_inds], inputs[[selected_ind]])  # [N_u, 1]
-        min_distances = torch.minimum(min_distances, distances.flatten())  # [N_u,]
+        min_distances = torch.minimum(min_distances, distances.flatten())  # [N_u]
 
         selected_ind = torch.argmax(min_distances).item()
         selected_ind = non_train_inds[selected_ind]

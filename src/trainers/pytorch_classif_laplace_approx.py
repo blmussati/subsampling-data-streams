@@ -171,10 +171,10 @@ class PyTorchClassificationLaplaceTrainer(
         features = self.model(inputs)  # [N, Cl]
         logprobs = log_softmax(features, dim=-1)  # [N, Cl]
 
-        acc = accuracy_from_marginals(logprobs, labels)  # [1,]
-        nll = nll_loss(logprobs, labels)  # [1,]
+        acc = accuracy_from_marginals(logprobs, labels)  # [1]
+        nll = nll_loss(logprobs, labels)  # [1]
 
-        return acc, nll  # [1,], [1,]
+        return acc, nll  # [1], [1]
 
     def postprocess_model(self, train_loader: DataLoader) -> None:
         if self.subnet_mask is not None:
@@ -224,15 +224,15 @@ class PyTorchClassificationLaplaceTrainer(
             inputs: Tensor[float], [N, *F]
 
         Returns:
-            Tensor[float], [N,]
+            Tensor[float], [N]
         """
         assert isinstance(self.model, ParametricLaplace)
 
         features = self.model.model(inputs)  # [N, Cl]
         logprobs = log_softmax(features, dim=-1)  # [N, Cl]
-        pseudolabels = torch.argmax(logprobs, dim=-1)  # [N,]
+        pseudolabels = torch.argmax(logprobs, dim=-1)  # [N]
 
-        return nll_loss(logprobs, pseudolabels, reduction="none")  # [N,]
+        return nll_loss(logprobs, pseudolabels, reduction="none")  # [N]
 
     def compute_badge_pseudoloss_v2(
         self, _input: Tensor, grad_params: ParamDict, no_grad_params: ParamDict
@@ -242,13 +242,13 @@ class PyTorchClassificationLaplaceTrainer(
             inputs: Tensor[float], [1, *F]
 
         Returns:
-            Tensor[float], [1,]
+            Tensor[float], [1]
         """
         features = functional_call(
             self.model, (grad_params, no_grad_params), _input[None, :]
         )  # [1, Cl]
 
         logprobs = log_softmax(features, dim=-1)  # [1, Cl]
-        pseudolabel = torch.argmax(logprobs, dim=-1)  # [1,]
+        pseudolabel = torch.argmax(logprobs, dim=-1)  # [1]
 
-        return nll_loss(logprobs, pseudolabel)  # [1,]
+        return nll_loss(logprobs, pseudolabel)  # [1]

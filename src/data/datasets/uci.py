@@ -28,7 +28,7 @@ class BaseUCI(BaseDataset):
 
         # Separate the inputs (all columns but the last) from the labels (last column).
         self.data = data[:, :-1]  # [N, F]
-        self.targets = data[:, -1]  # [N,]
+        self.targets = data[:, -1]  # [N]
 
         # Map the classes to start at zero.
         class_map = {_class: i for i, _class in enumerate(np.unique(self.targets))}

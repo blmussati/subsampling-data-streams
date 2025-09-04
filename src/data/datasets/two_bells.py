@@ -59,5 +59,5 @@ class TwoBells(BaseDataset):
         Compute the probability of class 1.
         """
         assert (inputs.ndim == 2) and (inputs.shape[1] == 2)  # [N, 2]
-        boundary_distance_in_v_dim = inputs[:, 1] - boundary(inputs[:, 0])  # [N,]
-        return logistic.cdf(boundary_distance_in_v_dim / label_scale)  # [N,]
+        boundary_distance_in_v_dim = inputs[:, 1] - boundary(inputs[:, 0])  # [N]
+        return logistic.cdf(boundary_distance_in_v_dim / label_scale)  # [N]

@@ -19,16 +19,16 @@ def mean_standard_deviation_from_probs(probs: Tensor) -> Tensor:
         probs: Tensor[float], [N, K, Cl]
 
     Returns:
-        Tensor[float], [N,]
+        Tensor[float], [N]
     """
     assert probs.ndim == 3
 
     variance = torch.mean(torch.square(probs), dim=1) - torch.mean(probs, dim=1) ** 2  # [N, Cl]
 
-    scores = torch.mean(torch.sqrt(variance), dim=-1)  # [N,]
-    scores = check(scores, score_type="mean_std")  # [N,]
+    scores = torch.mean(torch.sqrt(variance), dim=-1)  # [N]
+    scores = check(scores, score_type="mean_std")  # [N]
 
-    return scores  # [N,]
+    return scores  # [N]
 
 
 def predictive_margin_from_probs(probs: Tensor) -> Tensor:
@@ -42,7 +42,7 @@ def predictive_margin_from_probs(probs: Tensor) -> Tensor:
         probs: Tensor[float], [N, Cl] or [N, K, Cl]
 
     Returns:
-        Tensor[float], [N,]
+        Tensor[float], [N]
     """
     assert probs.ndim in {2, 3}
 
@@ -51,10 +51,10 @@ def predictive_margin_from_probs(probs: Tensor) -> Tensor:
 
     probs, _ = torch.sort(probs, dim=-1, descending=True)  # [N, Cl]
 
-    scores = probs[:, 1] - probs[:, 0]  # [N,]
-    scores = check(scores, min_value=-1, max_value=0, score_type="margin")  # [N,]
+    scores = probs[:, 1] - probs[:, 0]  # [N]
+    scores = check(scores, min_value=-1, max_value=0, score_type="margin")  # [N]
 
-    return scores  # [N,]
+    return scores  # [N]
 
 
 def variation_ratio_from_probs(probs: Tensor) -> Tensor:
@@ -65,16 +65,16 @@ def variation_ratio_from_probs(probs: Tensor) -> Tensor:
         probs: Tensor[float], [N, Cl] or [N, K, Cl]
 
     Returns:
-        Tensor[float], [N,]
+        Tensor[float], [N]
     """
     assert probs.ndim in {2, 3}
 
     if probs.ndim == 3:
         probs = torch.mean(probs, dim=1)  # [N, Cl]
 
-    max_probs, _ = torch.max(probs, dim=-1)  # [N,]
+    max_probs, _ = torch.max(probs, dim=-1)  # [N]
 
-    scores = 1 - max_probs  # [N,]
-    scores = check(scores, max_value=(1 - 1 / probs.shape[-1]), score_type="var_ratio")  # [N,]
+    scores = 1 - max_probs  # [N]
+    scores = check(scores, max_value=(1 - 1 / probs.shape[-1]), score_type="var_ratio")  # [N]
 
-    return scores  # [N,]
+    return scores  # [N]

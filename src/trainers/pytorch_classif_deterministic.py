@@ -45,10 +45,10 @@ class PyTorchClassificationDeterministicTrainer(
         """
         logprobs = self.predict(inputs)  # [N, Cl]
 
-        acc = accuracy_from_marginals(logprobs, labels)  # [1,]
-        nll = nll_loss(logprobs, labels)  # [1,]
+        acc = accuracy_from_marginals(logprobs, labels)  # [1]
+        nll = nll_loss(logprobs, labels)  # [1]
 
-        return acc, nll  # [1,], [1,]
+        return acc, nll  # [1], [1]
 
     def compute_badge_pseudoloss_v1(self, inputs: Tensor) -> Tensor:
         """
@@ -56,12 +56,12 @@ class PyTorchClassificationDeterministicTrainer(
             inputs: Tensor[float], [N, *F]
 
         Returns:
-            Tensor[float], [N,]
+            Tensor[float], [N]
         """
         logprobs = self.predict(inputs)  # [N, Cl]
-        pseudolabels = torch.argmax(logprobs, dim=-1)  # [N,]
+        pseudolabels = torch.argmax(logprobs, dim=-1)  # [N]
 
-        return nll_loss(logprobs, pseudolabels, reduction="none")  # [N,]
+        return nll_loss(logprobs, pseudolabels, reduction="none")  # [N]
 
     def compute_badge_pseudoloss_v2(
         self, _input: Tensor, grad_params: ParamDict, no_grad_params: ParamDict
@@ -71,16 +71,16 @@ class PyTorchClassificationDeterministicTrainer(
             inputs: Tensor[float], [1, *F]
 
         Returns:
-            Tensor[float], [1,]
+            Tensor[float], [1]
         """
         features = functional_call(
             self.model, (grad_params, no_grad_params), _input[None, :]
         )  # [1, Cl]
 
         logprobs = log_softmax(features, dim=-1)  # [1, Cl]
-        pseudolabel = torch.argmax(logprobs, dim=-1)  # [1,]
+        pseudolabel = torch.argmax(logprobs, dim=-1)  # [1]
 
-        return nll_loss(logprobs, pseudolabel)  # [1,]
+        return nll_loss(logprobs, pseudolabel)  # [1]
 
     def acquire_using_bait(
         self,
@@ -105,7 +105,7 @@ class PyTorchClassificationDeterministicTrainer(
         fisher_pool = fisher_train = counter = 0
 
         for inputs_i, _ in loader:
-            is_in_train = np.isin(range(counter, counter + len(inputs_i)), train_inds)  # [B,]
+            is_in_train = np.isin(range(counter, counter + len(inputs_i)), train_inds)  # [B]
             counter += len(inputs_i)
 
             embeddings_i = self.compute_bait_embeddings_v2(inputs_i, embedding_params)  # [B, Cl, E]
@@ -130,7 +130,7 @@ class PyTorchClassificationDeterministicTrainer(
             fisher_all,
             fisher_selected_inverse,
             oversampling_multiplier * n_acquire,
-        )  # [oversampling_multiplier * N_a,], [E, E]
+        )  # [oversampling_multiplier * N_a], [E, E]
 
         selected_inds = self.backward_select_for_bait(
             embeddings_pool[selected_inds],
@@ -138,11 +138,11 @@ class PyTorchClassificationDeterministicTrainer(
             fisher_selected_inverse,
             n_acquire,
             selected_inds,
-        )  # [N_a,]
+        )  # [N_a]
 
-        selected_inds = [pool_inds[ind] for ind in selected_inds]  # [N_a,]
+        selected_inds = [pool_inds[ind] for ind in selected_inds]  # [N_a]
 
-        return selected_inds  # [N_a,]
+        return selected_inds  # [N_a]
 
     def compute_bait_embeddings_v1(self, inputs: Tensor, embedding_params: Sequence[str]) -> Tensor:
         self.eval_mode()
@@ -164,16 +164,16 @@ class PyTorchClassificationDeterministicTrainer(
 
                 for name, param in self.model.named_parameters():
                     if name in embedding_params:
-                        embedding_ij += [param.grad.flatten()]  # [E',]
+                        embedding_ij += [param.grad.flatten()]  # [E']
 
-                embedding_ij = torch.cat(embedding_ij)  # [E,]
+                embedding_ij = torch.cat(embedding_ij)  # [E]
 
                 # Multiply by the square root of probs_ij. The square root is included because the
                 # Fisher matrix is E_{p(y|x,θ)}[g g^T] where g = ∇_θ log p(y|x,θ) and we compute it
                 # by a matrix multiplication that combines the outer product with the expectation.
-                embedding_ij *= torch.exp(0.5 * logprobs_ij)  # [E,]
+                embedding_ij *= torch.exp(0.5 * logprobs_ij)  # [E]
 
-                embedding_i += [embedding_ij]  # [E,]
+                embedding_i += [embedding_ij]  # [E]
 
             embedding_i = torch.stack(embedding_i)  # [Cl, E]
             embeddings += [embedding_i]  # [Cl, E]
@@ -226,7 +226,7 @@ class PyTorchClassificationDeterministicTrainer(
 
         logprobs = log_softmax(features, dim=-1)  # [1, Cl]
 
-        return logprobs[0, _class]  # [1,]
+        return logprobs[0, _class]  # [1]
 
     @staticmethod
     def forward_select_for_bait(
@@ -256,7 +256,7 @@ class PyTorchClassificationDeterministicTrainer(
                 V @ M_inv @ fisher_pool @ M_inv @ V.transpose(1, 2) @ A_inv
             )  # [N_p, Cl, Cl]
 
-            trace = torch.vmap(torch.trace)(matrix_prod)  # [N_p,]
+            trace = torch.vmap(torch.trace)(matrix_prod)  # [N_p]
 
             for j in torch.argsort(trace, descending=True):
                 if j.item() not in selected_inds:
@@ -294,10 +294,10 @@ class PyTorchClassificationDeterministicTrainer(
                 V @ M_inv @ fisher_pool @ M_inv @ V.transpose(1, 2) @ A_inv
             )  # [N_i, Cl, Cl]
 
-            trace = torch.vmap(torch.trace)(matrix_prod)  # [N_i,]
+            trace = torch.vmap(torch.trace)(matrix_prod)  # [N_i]
 
-            ind_to_remove = torch.argmax(trace).item()  # [1,]
-            inds_to_keep = [ind for ind in range(len(V)) if ind != ind_to_remove]  # [N_{i+1},]
+            ind_to_remove = torch.argmax(trace).item()  # [1]
+            inds_to_keep = [ind for ind in range(len(V)) if ind != ind_to_remove]  # [N_{i+1}]
 
             A_inv = torch.inverse(-I + V[ind_to_remove] @ M_inv @ V[ind_to_remove].T)  # [Cl, Cl]
 

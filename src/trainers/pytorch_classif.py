@@ -19,11 +19,11 @@ from src.typing import ParamDict
 
 class PyTorchClassificationTrainer(PyTorchTrainer):
     def train_step(self, loader: DataLoader) -> dict:
-        inputs, labels = get_next_batch(loader)  # [N, ...], [N,]
+        inputs, labels = get_next_batch(loader)  # [N, ...], [N]
 
         self.model.train()
 
-        acc, nll = self.evaluate_train(inputs, labels)  # [1,], [1,]
+        acc, nll = self.evaluate_train(inputs, labels)  # [1], [1]
 
         self.optimizer.zero_grad()
         nll.backward()
@@ -54,7 +54,7 @@ class PyTorchClassificationTrainer(PyTorchTrainer):
         embeddings = []
 
         for inputs, _ in loader:
-            pseudolosses = self.compute_badge_pseudoloss_v1(inputs)  # [B,]
+            pseudolosses = self.compute_badge_pseudoloss_v1(inputs)  # [B]
 
             for pseudoloss in pseudolosses:
                 # Prevent the grad attribute of each tensor accumulating a sum of gradients.
@@ -66,11 +66,11 @@ class PyTorchClassificationTrainer(PyTorchTrainer):
 
                 for name, param in model.named_parameters():
                     if name in embedding_params:
-                        gradient = param.grad.detach().flatten().cpu()  # [E',]
+                        gradient = param.grad.detach().flatten().cpu()  # [E']
                         embedding_i += [gradient]
 
-                embedding_i = torch.cat(embedding_i)  # [E,]
-                embeddings += [embedding_i]  # [E,]
+                embedding_i = torch.cat(embedding_i)  # [E]
+                embeddings += [embedding_i]  # [E]
 
         return torch.stack(embeddings)  # [N, E]
 

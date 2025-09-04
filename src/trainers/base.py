@@ -63,10 +63,10 @@ class DeterministicTrainer(Trainer):
 
         for inputs_i, _ in loader:
             self.set_rng_seed(seed)
-            scores_i = self.estimate_uncertainty_batch(inputs_i, method)  # [B,]
+            scores_i = self.estimate_uncertainty_batch(inputs_i, method)  # [B]
             scores += [scores_i.cpu()]
 
-        return torch.cat(scores)  # [N,]
+        return torch.cat(scores)  # [N]
 
 
 class StochasticTrainer(Trainer):
@@ -88,7 +88,7 @@ class StochasticTrainer(Trainer):
         if use_epig_with_target_class_dist:
             scores = self.estimate_epig_using_target_class_dist(
                 loader, n_input_samples=len(inputs_targ)
-            )  # [N,]
+            )  # [N]
 
         else:
             scores = []
@@ -97,9 +97,9 @@ class StochasticTrainer(Trainer):
                 self.set_rng_seed(seed)
 
                 if method == "epig":
-                    scores_i = self.estimate_epig_batch(inputs_i, inputs_targ)  # [B,]
+                    scores_i = self.estimate_epig_batch(inputs_i, inputs_targ)  # [B]
                 else:
-                    scores_i = self.estimate_uncertainty_batch(inputs_i, method)  # [B,]
+                    scores_i = self.estimate_uncertainty_batch(inputs_i, method)  # [B]
 
                 scores += [scores_i.cpu()]
 

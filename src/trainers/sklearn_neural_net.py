@@ -41,12 +41,12 @@ class SKLearnNeuralNetTrainer(Trainer):
         if isinstance(self.model, ClassifierMixin):
             preds = self.model.predict_proba(self.transform(inputs))  # [N, Cl]
         else:
-            preds = self.model.predict(self.transform(inputs))  # [N,]
+            preds = self.model.predict(self.transform(inputs))  # [N]
 
         return torch.tensor(preds, device=inputs.device)
 
     def train(self, train_loader: DataLoader) -> Tuple[None, None]:
-        inputs, labels = next(iter(train_loader))  # [N, *F], [N,]
+        inputs, labels = next(iter(train_loader))  # [N, *F], [N]
 
         assert len(inputs) == len(train_loader.dataset)
 

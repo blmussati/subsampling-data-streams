@@ -94,7 +94,7 @@ def estimate_purity(
         lies_in_ball = distances_i < ball_radius  # [B, N]
         does_not_match = cluster_assignments_i != cluster_assignments[None, :]  # [B, N]
 
-        is_pure = ~torch.any(lies_in_ball & does_not_match, axis=-1)  # [B,]
+        is_pure = ~torch.any(lies_in_ball & does_not_match, axis=-1)  # [B]
         n_pure += torch.sum(is_pure).item()
 
     return n_pure / len(inputs)

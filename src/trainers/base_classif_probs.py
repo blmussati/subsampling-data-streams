@@ -47,8 +47,8 @@ class ProbsClassificationDeterministicTrainer(DeterministicTrainer):
             probs = probs[:, :n_classes]  # [N, n_classes]
             probs /= torch.sum(probs, dim=-1, keepdim=True)  # [N, n_classes]
 
-        n_correct = count_correct_from_marginals(probs, labels)  # [1,]
-        nll = nll_loss_from_probs(probs, labels, reduction="sum")  # [1,]
+        n_correct = count_correct_from_marginals(probs, labels)  # [1]
+        nll = nll_loss_from_probs(probs, labels, reduction="sum")  # [1]
 
         return {"n_correct": n_correct, "nll": nll}
 
@@ -57,7 +57,7 @@ class ProbsClassificationDeterministicTrainer(DeterministicTrainer):
 
         probs = self.predict(inputs)  # [N, Cl]
 
-        return uncertainty_estimator(probs)  # [N,]
+        return uncertainty_estimator(probs)  # [N]
 
 
 class ProbsClassificationStochasticTrainer(StochasticTrainer):
@@ -81,8 +81,8 @@ class ProbsClassificationStochasticTrainer(StochasticTrainer):
             probs = probs[:, :n_classes]  # [N, n_classes]
             probs /= torch.sum(probs, dim=-1, keepdim=True)  # [N, n_classes]
 
-        n_correct = count_correct_from_marginals(probs, labels)  # [1,]
-        nll = nll_loss_from_probs(probs, labels, reduction="sum")  # [1,]
+        n_correct = count_correct_from_marginals(probs, labels)  # [1]
+        nll = nll_loss_from_probs(probs, labels, reduction="sum")  # [1]
 
         return {"n_correct": n_correct, "nll": nll}
 
@@ -93,7 +93,7 @@ class ProbsClassificationStochasticTrainer(StochasticTrainer):
             inputs, self.n_samples_test, independent=True
         )  # [N, K, Cl]
 
-        return uncertainty_estimator(probs)  # [N,]
+        return uncertainty_estimator(probs)  # [N]
 
     def estimate_epig_batch(self, inputs_pool: Tensor, inputs_targ: Tensor) -> Tensor:
         probs = self.conditional_predict(
@@ -106,9 +106,9 @@ class ProbsClassificationStochasticTrainer(StochasticTrainer):
         if self.epig_cfg.use_matmul:
             scores = epig_from_probs_using_matmul(probs_pool, probs_targ)  # [N_p,]
         else:
-            scores = epig_from_probs(probs_pool, probs_targ)  # [N_p,]
+            scores = epig_from_probs(probs_pool, probs_targ)  # [N_p]
 
-        return scores  # [N_p,]
+        return scores  # [N_p]
 
     def estimate_epig_using_target_class_dist(
         self, loader: DataLoader, n_input_samples: int | None = None
@@ -129,7 +129,7 @@ class ProbsClassificationStochasticTrainer(StochasticTrainer):
         target_class_dist = self.epig_cfg.target_class_dist
         target_class_dist = torch.tensor([target_class_dist]).to(inputs.device)  # [1, Cl]
         target_class_dist /= torch.sum(target_class_dist)  # [1, Cl]
-        weights = torch.sum(target_class_dist * probs_marg / probs_marg_marg, dim=-1)  # [N,]
+        weights = torch.sum(target_class_dist * probs_marg / probs_marg_marg, dim=-1)  # [N]
 
         # Ensure that ∑_{x_*} w(x_*) == N.
         assert math.isclose(torch.sum(weights).item(), len(weights), rel_tol=1e-3)
@@ -141,15 +141,15 @@ class ProbsClassificationStochasticTrainer(StochasticTrainer):
             # We do not need to normalize the weights before passing them to torch.multinomial().
             inds = torch.multinomial(
                 weights, num_samples=n_input_samples, replacement=True
-            )  # [N_s,]
+            )  # [N_s]
 
             probs_targ = probs_cond[inds]  # [N_s, K, Cl]
 
             for probs_cond_i in torch.split(probs_cond, len(inputs)):
                 if self.epig_cfg.use_matmul:
-                    scores_i = epig_from_probs_using_matmul(probs_cond_i, probs_targ)  # [B,]
+                    scores_i = epig_from_probs_using_matmul(probs_cond_i, probs_targ)  # [B]
                 else:
-                    scores_i = epig_from_probs(probs_cond_i, probs_targ)  # [B,]
+                    scores_i = epig_from_probs(probs_cond_i, probs_targ)  # [B]
 
                 scores += [scores_i.cpu()]
 
@@ -157,7 +157,7 @@ class ProbsClassificationStochasticTrainer(StochasticTrainer):
             probs_targ = probs_cond  # [N, K, Cl]
 
             for probs_cond_i in torch.split(probs_cond, len(inputs)):
-                scores_i = epig_from_probs_using_weights(probs_cond_i, probs_targ, weights)  # [B,]
+                scores_i = epig_from_probs_using_weights(probs_cond_i, probs_targ, weights)  # [B]
                 scores += [scores_i.cpu()]
 
-        return torch.cat(scores)  # [N,]
+        return torch.cat(scores)  # [N]

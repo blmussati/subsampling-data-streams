@@ -26,7 +26,7 @@ def conditional_epig_from_logprobs(logprobs_pool: Tensor, logprobs_targ: Tensor)
         logprobs_targ: Tensor[float], [N_t, K, Cl]
 
     Returns:
-        Tensor[float], [N_p,]
+        Tensor[float], [N_p]
     """
     assert logprobs_pool.ndim == logprobs_targ.ndim == 3
 
@@ -61,12 +61,12 @@ def epig_from_logprobs(logprobs_pool: Tensor, logprobs_targ: Tensor) -> Tensor:
         logprobs_targ: Tensor[float], [N_t, K, Cl]
 
     Returns:
-        Tensor[float], [N_p,]
+        Tensor[float], [N_p]
     """
     scores = conditional_epig_from_logprobs(logprobs_pool, logprobs_targ)  # [N_p, N_t]
-    scores = torch.mean(scores, dim=-1)  # [N_p,]
+    scores = torch.mean(scores, dim=-1)  # [N_p]
 
-    return scores  # [N_p,]
+    return scores  # [N_p]
 
 
 def epig_from_logprobs_using_matmul(logprobs_pool: Tensor, logprobs_targ: Tensor) -> Tensor:
@@ -76,12 +76,12 @@ def epig_from_logprobs_using_matmul(logprobs_pool: Tensor, logprobs_targ: Tensor
         logprobs_targ: Tensor[float], [N_t, K, Cl]
 
     Returns:
-        Tensor[float], [N_p,]
+        Tensor[float], [N_p]
     """
     probs_pool = torch.exp(logprobs_pool)  # [N_p, K, Cl]
     probs_targ = torch.exp(logprobs_targ)  # [N_t, K, Cl]
 
-    return epig_from_probs_using_matmul(probs_pool, probs_targ)  # [N_p,]
+    return epig_from_probs_using_matmul(probs_pool, probs_targ)  # [N_p]
 
 
 def epig_from_logprobs_using_weights(
@@ -98,13 +98,13 @@ def epig_from_logprobs_using_weights(
     Arguments:
         logprobs_pool: Tensor[float], [N_p, K, Cl]
         logprobs_targ: Tensor[float], [N_t, K, Cl], preds on proxy target inputs from the pool
-        weights: Tensor[float], [N_t,], weight on each proxy target input
+        weights: Tensor[float], [N_t], weight on each proxy target input
 
     Returns:
-        Tensor[float], [N_p,]
+        Tensor[float], [N_p]
     """
     scores = conditional_epig_from_logprobs(logprobs_pool, logprobs_targ)  # [N_p, N_t]
     scores = weights[None, :] * scores  # [N_p, N_t]
-    scores = torch.mean(scores, dim=-1)  # [N_p,]
+    scores = torch.mean(scores, dim=-1)  # [N_p]
 
-    return scores  # [N_p,]
+    return scores  # [N_p]

@@ -40,16 +40,16 @@ def marginal_entropy_from_probs(probs: Tensor) -> Tensor:
         probs: Tensor[float], [N, K, Cl]
 
     Returns:
-        Tensor[float], [N,]
+        Tensor[float], [N]
     """
     assert probs.ndim == 3
 
     probs = torch.mean(probs, dim=1)  # [N, Cl]
 
-    scores = entropy_from_probs(probs)  # [N,]
-    scores = check(scores, max_value=math.log(probs.shape[-1]), score_type="ME")  # [N,]
+    scores = entropy_from_probs(probs)  # [N]
+    scores = check(scores, max_value=math.log(probs.shape[-1]), score_type="ME")  # [N]
 
-    return scores  # [N,]
+    return scores  # [N]
 
 
 def conditional_entropy_from_probs(probs: Tensor) -> Tensor:
@@ -60,15 +60,15 @@ def conditional_entropy_from_probs(probs: Tensor) -> Tensor:
         probs: Tensor[float], [N, K, Cl]
 
     Returns:
-        Tensor[float], [N,]
+        Tensor[float], [N]
     """
     assert probs.ndim == 3
 
     scores = entropy_from_probs(probs)  # [N, K]
-    scores = torch.mean(scores, dim=-1)  # [N,]
-    scores = check(scores, max_value=math.log(probs.shape[-1]), score_type="CE")  # [N,]
+    scores = torch.mean(scores, dim=-1)  # [N]
+    scores = check(scores, max_value=math.log(probs.shape[-1]), score_type="CE")  # [N]
 
-    return scores  # [N,]
+    return scores  # [N]
 
 
 def bald_from_probs(probs: Tensor) -> Tensor:
@@ -86,12 +86,12 @@ def bald_from_probs(probs: Tensor) -> Tensor:
         probs: Tensor[float], [N, K, Cl]
 
     Returns:
-        Tensor[float], [N,]
+        Tensor[float], [N]
     """
-    marg_entropy = marginal_entropy_from_probs(probs)  # [N,]
-    cond_entropy = conditional_entropy_from_probs(probs)  # [N,]
+    marg_entropy = marginal_entropy_from_probs(probs)  # [N]
+    cond_entropy = conditional_entropy_from_probs(probs)  # [N]
 
-    scores = marg_entropy - cond_entropy  # [N,]
-    scores = check(scores, max_value=math.log(probs.shape[-1]), score_type="BALD")  # [N,]
+    scores = marg_entropy - cond_entropy  # [N]
+    scores = check(scores, max_value=math.log(probs.shape[-1]), score_type="BALD")  # [N]
 
-    return scores  # [N,]
+    return scores  # [N]
