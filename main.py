@@ -298,7 +298,7 @@ def acquire_using_uncertainty(
         cfg.acquisition.epig.classification.target_class_dist is not None
     )
 
-    if (cfg.acquisition.method == "epig") and (not use_epig_with_target_class_dist):
+    if ("epig" in cfg.acquisition.method) and (not use_epig_with_target_class_dist):
         if "TwoBells" in cfg.data.dataset._target_:
             target_dist = data.main_dataset.input_dist
             target_inputs = target_dist.rvs(cfg.acquisition.epig.n_target_samples, random_state=rng)
@@ -472,7 +472,16 @@ def main(cfg: DictConfig) -> None:
             f"Acquiring {cfg.acquisition.batch_size} label(s) using {cfg.acquisition.method}"
         )
 
-        uncertainty_types = {"bald", "epig", "marg_entropy", "mean_std", "pred_margin", "var_ratio"}
+        uncertainty_types = {
+            "bald",
+            "epig",
+            "la_epig",
+            "marg_entropy",
+            "mic",
+            "mean_std",
+            "pred_margin",
+            "var_ratio",
+        }
 
         if cfg.acquisition.method == "random":
             acquired_pool_inds = acquire_using_random(data, cfg, rng)

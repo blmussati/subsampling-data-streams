@@ -55,6 +55,7 @@ class GPyTorchTrainer:
     init_output_scale: float | None = None
     init_length_scale: float | None = None
     epig_cfg: DictConfig | None = None
+    mic_eta: float | None = None
 
     def __post_init__(self) -> None:
         warnings.simplefilter("ignore", UserWarning)

@@ -24,11 +24,13 @@ class SKLearnRandomForestClassificationTrainer(ProbsClassificationStochasticTrai
         model: RandomForestClassifier,
         n_classes_pls: int | None = None,
         epig_cfg: DictConfig | None = None,
+        mic_eta: float | None = None,
     ) -> None:
         self.model = model
         self.n_classes_pls = n_classes_pls
         self.n_samples_test = model.n_estimators  # Placeholder: this isn't used
         self.epig_cfg = epig_cfg
+        self.mic_eta = mic_eta
         self.use_val_data = False
 
     def eval_mode(self) -> None:

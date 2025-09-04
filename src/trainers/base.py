@@ -93,11 +93,15 @@ class StochasticTrainer(Trainer):
         else:
             scores = []
 
-            for inputs_i, _ in loader:
+            for inputs_i, labels_i in loader:
                 self.set_rng_seed(seed)
 
                 if method == "epig":
                     scores_i = self.estimate_epig_batch(inputs_i, inputs_targ)  # [B]
+                elif method == "la_epig":
+                    scores_i = self.estimate_la_epig_batch(inputs_i, inputs_targ, labels_i)  # [B]
+                elif method == "mic":
+                    scores_i = self.estimate_mic_batch(inputs_i, labels_i)  # [B]
                 else:
                     scores_i = self.estimate_uncertainty_batch(inputs_i, method)  # [B]
 

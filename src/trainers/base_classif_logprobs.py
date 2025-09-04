@@ -23,8 +23,10 @@ from src.uncertainty import (
     epig_from_logprobs,
     epig_from_logprobs_using_matmul,
     epig_from_logprobs_using_weights,
+    la_epig_from_logprobs,
     marginal_entropy_from_logprobs,
     mean_standard_deviation_from_logprobs,
+    mic_from_logprobs,
     predictive_margin_from_logprobs,
     variation_ratio_from_logprobs,
 )
@@ -168,3 +170,22 @@ class LogprobsClassificationStochasticTrainer(StochasticTrainer):
                 scores += [scores_i.cpu()]
 
         return torch.cat(scores)  # [N]
+
+    def estimate_la_epig_batch(
+        self, inputs_pool: Tensor, inputs_targ: Tensor, labels_pool: Tensor
+    ) -> Tensor:
+        logprobs = self.conditional_predict(
+            torch.cat((inputs_pool, inputs_targ)), self.n_samples_test, independent=False
+        )  # [N_p + N_t, K, Cl]
+
+        logprobs_pool = logprobs[: len(inputs_pool)]  # [N_p, K, Cl]
+        logprobs_targ = logprobs[len(inputs_pool) :]  # [N_t, K, Cl]
+
+        return la_epig_from_logprobs(logprobs_pool, logprobs_targ, labels_pool)  # [N_p]
+
+    def estimate_mic_batch(self, inputs_pool: Tensor, labels_pool: Tensor) -> Tensor:
+        logprobs = self.conditional_predict(
+            inputs_pool, self.n_samples_test, independent=True
+        )  # [N, K, Cl]
+
+        return mic_from_logprobs(logprobs, labels_pool, self.mic_eta)  # [N]

@@ -26,3 +26,7 @@ from .heuristics_probs import (
     predictive_margin_from_probs,
     variation_ratio_from_probs,
 )
+from .la_epig_logprobs import la_epig_from_logprobs
+from .la_epig_probs import la_epig_from_probs
+from .mic_logprobs import mic_from_logprobs
+from .mic_probs import mic_from_probs

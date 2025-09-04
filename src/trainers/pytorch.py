@@ -29,6 +29,7 @@ class PyTorchTrainer:
     early_stopping_patience: int
     restore_best_model: bool
     epig_cfg: DictConfig | None = None
+    mic_eta: float | None = None
 
     def __post_init__(self) -> None:
         self.optimizer = self.optimizer(params=self.model.parameters())
