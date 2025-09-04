@@ -34,16 +34,14 @@ Clone the repo and move into it:
 git clone https://github.com/fbickfordsmith/epig.git && cd epig
 ```
 
-If you're not using a CUDA device, remove the `cudatoolkit` and `pytorch-cuda` dependencies in [`environment.yaml`](/environment.yaml).
-
 Create an environment using [Mamba](https://mamba.readthedocs.io) (or [Conda](https://conda.io), replacing `mamba` with `conda` below) and activate it:
 
 ```bash
-mamba env create --file environment.yaml && mamba activate epig
+mamba env create --file environment_cuda.yaml && mamba activate epig
 ```
 
 
-## Reproducing the results
+## Running active learning
 
 Run active learning with the default config:
 
@@ -62,15 +60,6 @@ These embeddings just need to be moved into `data/` within this repo, and can be
 
 Contact [Freddie](https://github.com/fbickfordsmith) if you have any questions about this research or encounter any problems using the code.
 This repo is a partial release of a bigger internal repo, and it's possible that errors were introduced when preparing this repo for release.
-
-
-## Contributors
-
-[Andreas Kirsch](https://github.com/BlackHC) wrote the original versions of the BALD and EPIG functions in this repo, along with the dropout layers, and advised on the code in general.
-[Adam Foster](https://github.com/ae-foster) and [Joost van Amersfoort](https://github.com/y0ast) advised on the Gaussian-process implementation.
-[Jannik Kossen](https://github.com/jlko) provided a repo template and advised on the code in general.
-
-Credit for the unsupervised encoders we use in our semi-supervised models goes to the authors of [`disentangling-vae`](https://github.com/YannDubs/disentangling-vae), [`lightly`](https://github.com/lightly-ai/lightly), [`msn`](https://github.com/facebookresearch/msn) and [`solo-learn`](https://github.com/vturrisi/solo-learn), as well as the designers of the pretraining methods used.
 
 
 ## Citing this work
@@ -92,3 +81,12 @@ Credit for the unsupervised encoders we use in our semi-supervised models goes t
     journal = {International Conference on Artificial Intelligence and Statistics},
 }
 ```
+
+
+## Contributors
+
+[Andreas Kirsch](https://github.com/BlackHC) wrote the original versions of the BALD and EPIG functions in this repo, along with the dropout layers, and advised on the code in general.
+[Adam Foster](https://github.com/ae-foster) and [Joost van Amersfoort](https://github.com/y0ast) advised on the Gaussian-process implementation.
+[Jannik Kossen](https://github.com/jlko) provided a repo template and advised on the code in general.
+
+Credit for the unsupervised encoders we use in our semi-supervised models goes to the authors of [`disentangling-vae`](https://github.com/YannDubs/disentangling-vae), [`lightly`](https://github.com/lightly-ai/lightly), [`msn`](https://github.com/facebookresearch/msn) and [`solo-learn`](https://github.com/vturrisi/solo-learn), as well as the designers of the pretraining methods used.

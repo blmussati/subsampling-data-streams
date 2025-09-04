@@ -1,0 +1,31 @@
+# Channels are checked in the order they are listed.
+
+name: epig
+
+channels:
+  - pytorch
+  - conda-forge
+
+dependencies:
+  - black
+  - faiss-cpu=1.8
+  - gpytorch
+  - hydra-core
+  - isort
+  - jupyter
+  - matplotlib
+  - numpy
+  - pandas
+  - pip
+  - python=3.10
+  - pytorch
+  - scikit-learn
+  - seaborn
+  - torchvision
+  - tqdm
+  - wandb
+  - pip:
+    - --editable .  # Install src as a package
+    - batchbald_redux  # For "consistent" dropout layers
+    - robustness  # For ImageNet hierarchy
+    - git+https://github.com/AlexImmer/Laplace.git  # For Laplace approximation (releases on conda-forge and PyPI are outdated)
