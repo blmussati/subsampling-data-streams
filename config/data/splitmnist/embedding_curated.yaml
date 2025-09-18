@@ -1,0 +1,5 @@
+defaults:
+  - splitmnist/input/embedding
+  - splitmnist/pool/balanced
+  - splitmnist/target/balanced
+  - splitmnist/test/balanced

@@ -1,0 +1,11 @@
+# @package _global_
+
+defaults:
+  - image
+
+data:
+  dataset:
+    _target_: src.data.datasets.EmbeddingSplitMNIST
+    # embedding_type: simclr
+    embedding_type: dinov2
+  n_classes: 10

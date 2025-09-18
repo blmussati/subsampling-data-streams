@@ -1,0 +1,127 @@
+# Main configuration file for the continual active learning experiment
+
+# From the Hydra docs (https://hydra.cc/docs/tutorials/basic/your_first_app/defaults):
+# - If multiple configs define the same value, the last one wins.
+# - If the primary config contains both config values and a defaults
+#   list, include `_self_` to specify the composition order.
+
+# Specify trainer before data so that the data config can override the trainer config.
+defaults:
+  - _self_
+  - trainer: pytorch_neural_net_classif_mcdo
+  - data: mnist/image_curated_pool
+  - model: pytorch_conv_net_batchbald2_mcdo
+
+acquisition:
+  batch_size: 1  # How many labels to acquire at each active-learning step
+  badge_version: 2  # How to compute BADGE embeddings
+  badge_bait_memory_budget_gb: 16  # Memory budget (GB) for BADGE embeddings
+  epig:
+    classification:
+      target_class_dist: null  # Target class distribution
+      use_matmul: True  # Use an efficient implementation using matrix multiplication
+    n_target_samples: 100  # Number of sampled target inputs
+  mic:
+    mic_kwargs:
+      c: 0.1
+      eta: 1.
+      noise_sigma: 0.3
+      n_classes: ${data.n_classes}
+  method: random
+  # 20250508: commenting out `probcover` as temporary fix to stop InterpolationError
+  # probcover:
+  #   graph_constructor:
+  #     _target_: src.coresets.probcover.construct_graph
+  #     ball_radius: ${acquisition.probcover.tuned_ball_radius[${data.dataset._target_}][${data.dataset.embedding_type}]}
+  #     batch_size: ${data.batch_sizes.pool}
+  #   tuned_ball_radius:
+  #     src.data.datasets.EmbeddingCIFAR10:
+  #       mocov2plus: 0.62
+  #     src.data.datasets.EmbeddingDSprites:
+  #       btcvae: 0.06
+  #     src.data.datasets.EmbeddingImageNet:
+  #       vitb4_300ep: 0.22
+  #     src.data.datasets.EmbeddingMNIST:
+  #       simclr: 0.26
+  #     # 20250210: workaround for InterpolationError, odd bc I never had it before
+  #     src.data.datasets.EmbeddingSplitMNIST:
+  #       simclr: 0.26
+  #     src.data.datasets.EmbeddingSplitCIFAR10:
+  #       mocov2plus: 0.62
+
+adjust_test_predictions: False
+eval_every_acq_step: False
+
+data:
+  _target_: src.data.active_learning.ActiveLearningData
+  dataset:
+    _partial_: True
+    data_dir: ${directories.data}
+  batch_sizes:
+    pool: ${data.batch_sizes.test}
+    target: ${acquisition.epig.n_target_samples}
+    test: -1
+    train: -1
+    val: ${data.batch_sizes.test}
+  label_counts_test: -1
+
+continual_learning:
+  n_classes: ${data.n_classes}
+  shuffle_classes: False
+  n_experiences: 5
+  save_coresets: True
+
+directories:
+  base: .
+  data: ${directories.base}/data
+  results_base: ${directories.base}/results/current
+  results_run: ${hydra:runtime.output_dir}
+  results_subdirs:
+    gpytorch:
+      - ${hydra:runtime.output_dir}/data_indices
+      - ${hydra:runtime.output_dir}/git
+      - ${hydra:runtime.output_dir}/models
+      - ${hydra:runtime.output_dir}/training
+      - ${hydra:runtime.output_dir}/coresets
+    pytorch:
+      - ${hydra:runtime.output_dir}/data_indices
+      - ${hydra:runtime.output_dir}/git
+      - ${hydra:runtime.output_dir}/models
+      - ${hydra:runtime.output_dir}/training
+      - ${hydra:runtime.output_dir}/coresets
+    sklearn:
+      - ${hydra:runtime.output_dir}/data_indices
+      - ${hydra:runtime.output_dir}/git
+      - ${hydra:runtime.output_dir}/coresets
+
+experiment_name: dev
+
+hydra:
+  job:
+    config:
+      override_dirname:
+        exclude_keys:
+          - experiment_name
+          - wandb
+  job_logging:
+    handlers:
+      file:
+        filename: ${hydra:runtime.output_dir}/run.log
+  run:
+    dir: ${directories.results_base}/${experiment_name}/${now:%Y-%m-%d-%H-%M-%S}
+  sweep:
+    dir: ${hydra.run.dir}
+    subdir: ${hydra.job.override_dirname}
+
+model_save_steps: []
+
+rng:
+  _target_: src.random.get_rng
+  seed: 0
+
+use_gpu: True
+
+wandb:
+  init:
+    project: continual-active-learning
+  use: True

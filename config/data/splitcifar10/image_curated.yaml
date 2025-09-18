@@ -1,0 +1,5 @@
+defaults:
+  - splitcifar10/input/image
+  - splitcifar10/pool/balanced
+  - splitcifar10/target/balanced
+  - splitcifar10/test/balanced

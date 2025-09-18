@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Raw image data, we use a dropout-enabled convolutional neural network
+python  cal.py  --multirun  rng.seed=range\(3\)  experiment_name=SplitMNIST     data=splitmnist/image_curated_pool       model=pytorch_conv_net_batchbald2_mcdo  trainer=pytorch_neural_net_classif_mcdo  acquisition.n_train_labels_end=20  acquisition.method=la_epig     eval_every_acq_step=True
+python  cal.py  --multirun  rng.seed=range\(3\)  experiment_name=SplitMNIST     data=splitmnist/image_curated_pool       model=pytorch_conv_net_batchbald2_mcdo  trainer=pytorch_neural_net_classif_mcdo  acquisition.n_train_labels_end=20  acquisition.method=random      eval_every_acq_step=True
+python  cal.py  --multirun  rng.seed=range\(3\)  experiment_name=SplitMNIST     data=splitmnist/image_curated_pool       model=pytorch_conv_net_batchbald2_mcdo  trainer=pytorch_neural_net_classif_mcdo  acquisition.n_train_labels_end=20  acquisition.method=mic         eval_every_acq_step=True
+# Raw image data, we use a dropout-enabled convolutional neural network
+python  cal.py  --multirun  rng.seed=range\(3\)  experiment_name=SplitMNIST     data=splitmnist/image_curated_pool       model=pytorch_conv_net_batchbald2_mcdo  trainer=pytorch_neural_net_classif_mcdo  acquisition.n_train_labels_end=100  acquisition.method=la_epig     eval_every_acq_step=True
+python  cal.py  --multirun  rng.seed=range\(3\)  experiment_name=SplitMNIST     data=splitmnist/image_curated_pool       model=pytorch_conv_net_batchbald2_mcdo  trainer=pytorch_neural_net_classif_mcdo  acquisition.n_train_labels_end=100  acquisition.method=random      eval_every_acq_step=True
+python  cal.py  --multirun  rng.seed=range\(3\)  experiment_name=SplitMNIST     data=splitmnist/image_curated_pool       model=pytorch_conv_net_batchbald2_mcdo  trainer=pytorch_neural_net_classif_mcdo  acquisition.n_train_labels_end=100  acquisition.method=mic         eval_every_acq_step=True
+
+python  cal.py  --multirun  rng.seed=range\(3\)  experiment_name=SplitMNIST     data=splitmnist/image_curated_pool       model=pytorch_conv_net_batchbald2_mcdo  trainer=pytorch_neural_net_classif_mcdo  acquisition.n_train_labels_end=20  acquisition.method=epig        eval_every_acq_step=True
+python  cal.py  --multirun  rng.seed=range\(3\)  experiment_name=SplitMNIST     data=splitmnist/image_curated_pool       model=pytorch_conv_net_batchbald2_mcdo  trainer=pytorch_neural_net_classif_mcdo  acquisition.n_train_labels_end=100  acquisition.method=epig        eval_every_acq_step=True
+
+# python  cal.py  --multirun  rng.seed=range\(3\)  experiment_name=SplitMNIST     data=splitmnist/image_curated_pool       model=pytorch_conv_net_batchbald2_mcdo  trainer=pytorch_neural_net_classif_mcdo  acquisition.n_train_labels_end=50  acquisition.method=la_epig     eval_every_acq_step=True
+# python  cal.py  --multirun  rng.seed=range\(3\)  experiment_name=SplitMNIST     data=splitmnist/image_curated_pool       model=pytorch_conv_net_batchbald2_mcdo  trainer=pytorch_neural_net_classif_mcdo  acquisition.n_train_labels_end=50  acquisition.method=epig        eval_every_acq_step=True
+# python  cal.py  --multirun  rng.seed=range\(3\)  experiment_name=SplitMNIST     data=splitmnist/image_curated_pool       model=pytorch_conv_net_batchbald2_mcdo  trainer=pytorch_neural_net_classif_mcdo  acquisition.n_train_labels_end=50  acquisition.method=random      eval_every_acq_step=True
+# python  cal.py  --multirun  rng.seed=range\(3\)  experiment_name=SplitMNIST     data=splitmnist/image_curated_pool       model=pytorch_conv_net_batchbald2_mcdo  trainer=pytorch_neural_net_classif_mcdo  acquisition.n_train_labels_end=50  acquisition.method=mic         eval_every_acq_step=True
