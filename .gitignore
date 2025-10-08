@@ -2,3 +2,6 @@ __pycache__/
 data/*
 results/*
 *.egg-info
+jobs/splitmnist/20*
+jobs/splitcifar10/20*
+.vscode/
