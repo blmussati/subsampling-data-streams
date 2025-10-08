@@ -24,10 +24,10 @@ mamba env create --file environment_cuda.yaml && mamba activate epig
 
 ## Running active learning
 
-Run active learning with the default config:
+Run with the default config:
 
 ```bash
-python main.py
+python main_cl.py
 ```
 
 See [`jobs/`](/jobs/) for the commands used to run the continual learning experiments in the papers.
@@ -36,6 +36,7 @@ For the models comprising an encoder and a prediction head, the encoder is fixed
 Thus, we can compute the encoders' embeddings of all our inputs once up front and then save them to storage.
 These embeddings just need to be moved into `data/` within this repo, and can be obtained from [`msn-embeddings`](https://github.com/fbickfordsmith/msn-embeddings.git), [`simclr-embeddings`](https://github.com/fbickfordsmith/simclr-embeddings.git), [`ssl-embeddings`](https://github.com/fbickfordsmith/ssl-embeddings.git) and [`vae-embeddings`](https://github.com/fbickfordsmith/vae-embeddings.git).
 
+To swap the embeddings used, go to `config > data > splitmnist/splitcifar10 > input > embedding.yaml` and uncomment the other `embedding_type`.
 
 ## Getting in touch
 
@@ -67,6 +68,6 @@ This repo is a partial release of a bigger internal repo, and it's possible that
 
 ## Contributors
 
-[Freddie Bickford Smit](https://github.com/fbickfordsmith) wrote the original EPIG work in active learning and advised on the code for this project.
+[Freddie Bickford Smith](https://github.com/fbickfordsmith) wrote the original EPIG work in active learning and advised on the code for this project.
 
 Credit for the unsupervised encoders we use in our semi-supervised models goes to the authors of [`disentangling-vae`](https://github.com/YannDubs/disentangling-vae), [`lightly`](https://github.com/lightly-ai/lightly), [`msn`](https://github.com/facebookresearch/msn) and [`solo-learn`](https://github.com/vturrisi/solo-learn), as well as the designers of the pretraining methods used.
