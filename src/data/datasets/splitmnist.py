@@ -91,14 +91,3 @@ class EmbeddingSplitMNIST(BaseEmbeddingDataset):
             self.targets = self.targets[selected_inds]
             self.dataset_inds = selected_inds
 
-
-# if __name__ == "__main__":
-#     proj_dir = Path(__file__).resolve().parents[3]
-#     data_dir = proj_dir.joinpath('data')
-#     classes = np.array([9, 2])
-#     trainset_split = SplitMNIST(data_dir=data_dir, classes_per_exp=classes, train=True)
-#     testset_split = SplitMNIST(data_dir=data_dir, classes_per_exp=classes, train=False)
-#     trainset_split = EmbeddingSplitMNIST(data_dir=data_dir, classes_per_exp=classes, embedding_type='simclr', train=True)
-#     testset_split = EmbeddingSplitMNIST(data_dir=data_dir, classes_per_exp=classes, embedding_type='simclr', train=False)
-#     print(trainset_split.data.shape)
-#     print(testset_split.data.shape) 
