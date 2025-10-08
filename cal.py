@@ -63,12 +63,6 @@ def acquire_using_random(data: ActiveLearningData, cfg: DictConfig, rng: Generat
     return rng.choice(n_pool, size=cfg.acquisition.batch_size, replace=False).tolist()
 
 
-# TODO 20250206 copy paste from main.py as further baseline
-def acquire_using_balanced_random(data: ActiveLearningData, cfg: DictConfig, rng: Generator, trainer: Trainer
-) -> List[int]:
-    raise NotImplementedError
-
-
 def acquire_using_uncertainty(
     data: ActiveLearningData, cfg: DictConfig, rng: Generator, device: str, trainer: Trainer
 ) -> List[int]:
@@ -92,14 +86,6 @@ def acquire_using_uncertainty(
     with torch.inference_mode():
         scores = trainer.estimate_uncertainty(**acq_kwargs)
 
-    # TODO 20250206 Ask Freddie why he removed this
-    # if cfg.acquisition.batch_size == 1:
-    #     acquired_pool_inds = [torch.argmax(scores).item()]
-    # else:
-    #     # Use stochastic batch acquisition (https://arxiv.org/abs/2106.12059).
-    #     scores = torch.log(scores) + Gumbel(loc=0, scale=1).sample(scores.shape)
-    #     acquired_pool_inds = torch.argsort(scores)[-cfg.acquisition.batch_size :]
-    #     acquired_pool_inds = acquired_pool_inds.tolist()
     acquired_pool_inds = torch.argsort(scores, descending=True)[:cfg.acquisition.batch_size]
     acquired_pool_inds = acquired_pool_inds.tolist()
 
@@ -141,13 +127,12 @@ def split_classes_equally(cfg):
     - list of np.ndarray: A list containing d equally-sized numpy arrays.
     
     Raises:
-    - ValueError: If d is not an exact divisor of the length of arr.
+    - ValueError: If n_experiences is not an exact divisor of n_classes.
     """
     n_classes = cfg.n_classes
     n_experiences = cfg.n_experiences
     shuffle = cfg.shuffle_classes
 
-    # Check if d is an exact divisor of n
     if n_classes % n_experiences != 0:
         raise ValueError(f"The number of experiences (n_experiences={n_experiences}) must be an exact divisor of the array length (n_classes={n_classes}).")
     
@@ -155,9 +140,7 @@ def split_classes_equally(cfg):
     if shuffle:
         classes = np.random.permutation(classes)
 
-    # Use np.array_split to split the array
     classes_per_exp = np.array_split(classes, n_experiences)    # list[np.ndarray]
-    # classes_per_exp = map(tuple, classes_per_exp)    # Alternatively, object map iterating over tuples
     return classes_per_exp
 
 
@@ -176,20 +159,14 @@ def check_optim_steps_max(cfg: DictConfig):
         assert n_optim_steps_max > (M*n_experiences//bs_train), f"n_optim_steps_max should be at least {(M*n_experiences//bs_train)+1}"
 
 
-# TODO 20250206 Ask Freddie why the change in the config_path
-# @hydra.main(version_base=None, config_path="config", config_name="main_cal")
 @hydra.main(version_base=None, config_path=str(config_dir), config_name="main_cal")
 def main(cfg: DictConfig) -> None:
     """
-    Adapted from main.py to retain only relevant parts for CLEPIG experiments. 
+    Adapted from main.py to retain only relevant parts for CL experiments. 
     Modified to have the continual active learning loop.
     """
     slurm_job_id = os.environ.get("SLURM_JOB_ID", default=None)  # None if not running in Slurm
 
-    # use_gpu = True
-    # rng_seed = 1
-    # device = get_device(use_gpu)
-    # rng = get_rng(rng_seed)
     device = get_device(cfg.use_gpu)
     rng = call(cfg.rng)
     formatters = get_formatters()
@@ -205,12 +182,6 @@ def main(cfg: DictConfig) -> None:
     if cfg.model_type != "sklearn":
         check_optim_steps_max(cfg)
 
-    # The ${hydra:runtime.output_dir} location can be customised 
-    # using configs
-    # hydra:
-    #   run:
-    #     dir:
-    # In the configurations' YAML file.
     results_dir = Path(cfg.directories.results_run)
 
     for subdir in cfg.directories.results_subdirs[cfg.model_type]:
@@ -239,18 +210,6 @@ def main(cfg: DictConfig) -> None:
         logging.info(f"CL task {experience}, classes {_classes}")
         data = instantiate(cfg.data, rng=rng, device=device, dataset={"classes_per_exp": _classes})
         data.convert_datasets_to_torch()
-
-        """
-        if experience == 0:
-            # Comment out this code to use the same model for all CL steps and all AL steps.
-            model = instantiate(cfg.model, input_shape=data.main_dataset.input_shape, output_size=n_classes)
-            model = model.to(device)
-
-            seed = rng.choice(int(1e6))
-            torch_rng = torch.Generator(device).manual_seed(seed)
-
-            trainer = instantiate(cfg.trainer, model=model, torch_rng=torch_rng)
-        """
 
         # ----------------------------------------------------------------------------------------------
         logging.info(f"{int(cfg.acquisition.n_train_labels_end / cfg.acquisition.batch_size)} active learning steps")
@@ -298,7 +257,7 @@ def main(cfg: DictConfig) -> None:
                 else:
                     train_loader = data.get_loader(subset="train")
 
-                # Include check that valset is non-empty
+                # Check that valset is non-empty
                 if trainer.use_val_data and data.main_inds['val']:
                     val_loader = data.get_loader("val")
                     train_step, train_log = trainer.train(
@@ -328,7 +287,6 @@ def main(cfg: DictConfig) -> None:
                 torch.save(model_state, results_dir / "models" / f"{n_labels_str}.pth")
 
             if cfg.eval_every_acq_step:
-                # adjust_test_predictions=True only for embedded MNIST/CIFAR10, redundant settings, random forest classifier
                 if cfg.adjust_test_predictions:
                     test_labels = data.test_dataset.targets[data.test_inds]
                     test_kwargs = dict(n_classes=len(torch.unique(test_labels)))
@@ -357,7 +315,6 @@ def main(cfg: DictConfig) -> None:
                 break
             
             # ----------------------------------------------------------------------------------------------
-            # logging.info(f"Acquiring {cfg.acquisition.batch_size} label(s) using {cfg.acquisition.method}")
             uncertainty_types = {
                 "epig",
                 "la_epig",
@@ -365,12 +322,7 @@ def main(cfg: DictConfig) -> None:
             }
 
             if cfg.acquisition.method == "random":
-                # TODO check this behaves as expected in GDumb
                 acquired_pool_inds = acquire_using_random(data, cfg, rng)
-
-            # TODO add this baseline for CLEPIG comparisons
-            # elif cfg.acquisition.method in {"approx_balanced_random", "balanced_random"}:
-            #     acquired_pool_inds = acquire_using_balanced_random(data, cfg, rng, trainer)
 
             elif cfg.acquisition.method in uncertainty_types:
                 acquired_pool_inds = acquire_using_uncertainty(data, cfg, rng, device, trainer)
@@ -398,9 +350,7 @@ def main(cfg: DictConfig) -> None:
 
         # ----------------------------------------------------------------------------------------------
         # Compute performance on evaluation set at the end of each CL task 
-        # Different from main.py, where we compute test performance at the end of each AL step
 
-        # adjust_test_predictions=True only for embedded MNIST/CIFAR10, redundant settings, random forest classifier
         if cfg.adjust_test_predictions:
             test_labels = data.test_dataset.targets[data.test_inds]
             test_kwargs = dict(n_classes=len(torch.unique(test_labels)))
