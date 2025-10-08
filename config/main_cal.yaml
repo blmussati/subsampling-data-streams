@@ -28,26 +28,6 @@ acquisition:
       noise_sigma: 0.3
       n_classes: ${data.n_classes}
   method: random
-  # 20250508: commenting out `probcover` as temporary fix to stop InterpolationError
-  # probcover:
-  #   graph_constructor:
-  #     _target_: src.coresets.probcover.construct_graph
-  #     ball_radius: ${acquisition.probcover.tuned_ball_radius[${data.dataset._target_}][${data.dataset.embedding_type}]}
-  #     batch_size: ${data.batch_sizes.pool}
-  #   tuned_ball_radius:
-  #     src.data.datasets.EmbeddingCIFAR10:
-  #       mocov2plus: 0.62
-  #     src.data.datasets.EmbeddingDSprites:
-  #       btcvae: 0.06
-  #     src.data.datasets.EmbeddingImageNet:
-  #       vitb4_300ep: 0.22
-  #     src.data.datasets.EmbeddingMNIST:
-  #       simclr: 0.26
-  #     # 20250210: workaround for InterpolationError, odd bc I never had it before
-  #     src.data.datasets.EmbeddingSplitMNIST:
-  #       simclr: 0.26
-  #     src.data.datasets.EmbeddingSplitCIFAR10:
-  #       mocov2plus: 0.62
 
 adjust_test_predictions: False
 eval_every_acq_step: False
