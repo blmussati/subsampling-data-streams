@@ -17,12 +17,6 @@ from src.typing import Array
 
 
 class BaseSplitCIFAR10(BaseDataset):
-    """
-    If dataset = TorchVisionMNIST() then
-    - dataset.data is a torch.Tensor with dtype torch.uint8, shape [N, H, W] and values in [0, 255]
-    - dataset.targets is a torch.Tensor with dtype torch.int64
-    - The class counts are [5923, 6742, 5958, 6131, 5842, 5421, 5918, 6265, 5851, 5949]
-    """
 
     @staticmethod
     def preprocess_inputs_dtype_shape(inputs: Tensor) -> Tensor:
@@ -91,14 +85,3 @@ class EmbeddingSplitCIFAR10(BaseEmbeddingDataset):
             self.targets = self.targets[selected_inds]
             self.dataset_inds = selected_inds
 
-
-# if __name__ == "__main__":
-#     proj_dir = Path(__file__).resolve().parents[3]
-#     data_dir = proj_dir.joinpath('data')
-#     classes = np.array([9, 2])
-#     trainset_split = SplitMNIST(data_dir=data_dir, classes_per_exp=classes, train=True)
-#     testset_split = SplitMNIST(data_dir=data_dir, classes_per_exp=classes, train=False)
-#     trainset_split = EmbeddingSplitMNIST(data_dir=data_dir, classes_per_exp=classes, embedding_type='simclr', train=True)
-#     testset_split = EmbeddingSplitMNIST(data_dir=data_dir, classes_per_exp=classes, embedding_type='simclr', train=False)
-#     print(trainset_split.data.shape)
-#     print(testset_split.data.shape) 
