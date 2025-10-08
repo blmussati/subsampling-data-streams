@@ -14,8 +14,6 @@ defaults:
 
 acquisition:
   batch_size: 1  # How many labels to acquire at each active-learning step
-  badge_version: 2  # How to compute BADGE embeddings
-  badge_bait_memory_budget_gb: 16  # Memory budget (GB) for BADGE embeddings
   epig:
     classification:
       target_class_dist: null  # Target class distribution
